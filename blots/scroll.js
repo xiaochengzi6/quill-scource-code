@@ -21,9 +21,11 @@ class Scroll extends Parchment.Scroll {
         return whitelist;
       }, {});
     }
-    // Some reason fixes composition issues with character languages in Windows/Chrome, Safari
+    // 某些原因修复了Windows/Chrome, Safari中字符语言的组合问题 
     this.domNode.addEventListener('DOMNodeInserted', function() {});
+    // 触发 一次 optimize 
     this.optimize();
+    // 设置 contenteditable= 'true'
     this.enable();
   }
 
@@ -133,6 +135,7 @@ class Scroll extends Parchment.Scroll {
     return getLines(this, index, length);
   }
 
+  // Blot 的任何变动都会触发 optimize 方法  
   optimize(mutations = [], context = {}) {
     if (this.batch === true) return;
     super.optimize(mutations, context);
