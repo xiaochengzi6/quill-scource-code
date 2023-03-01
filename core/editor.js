@@ -1,6 +1,6 @@
 import Delta from 'quill-delta';
 import DeltaOp from 'quill-delta/lib/op';
-import Parchment from 'parchment';
+import Parchment from '../parchment/dist/parchment';
 import CodeBlock from '../formats/code';
 import CursorBlot from '../blots/cursor';
 import Block, { bubbleFormats } from '../blots/block';
@@ -107,6 +107,7 @@ class Editor {
     return this.delta.slice(index, index + length);
   }
 
+  // 这里获取 Delta 数据
   getDelta() {
     return this.scroll.lines().reduce((delta, line) => {
       return delta.concat(line.delta());

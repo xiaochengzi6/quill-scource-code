@@ -1,4 +1,4 @@
-import Parchment from 'parchment';
+import Parchment from '../parchment/dist/parchment';
 import Emitter from '../core/emitter';
 import Block, { BlockEmbed } from './block';
 import Break from './break';

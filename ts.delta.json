@@ -1,0 +1,16 @@
+// {
+//   "compilerOptions": {
+//     "declaration": true,
+//     "outDir": "./delta/dist/",
+//     "sourceMap": true,
+//     "strict": true,
+//     "target": "ES2015",
+//     "module": "commonjs",
+//     "strictNullChecks": true,
+//     "noErrorTruncation": true,
+//     "noUnusedLocals": true,
+//     "noUnusedParameters": true
+//   },
+//   "include": ["delta/src/**/*.ts"]
+// }
+

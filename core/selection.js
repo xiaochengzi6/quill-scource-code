@@ -1,4 +1,5 @@
-import Parchment from 'parchment';
+// 这里去引入自己打包的文件 方便调试
+import Parchment from '../parchment/dist/parchment';
 import clone from 'clone';
 import equal from 'deep-equal';
 import Emitter from './emitter';
