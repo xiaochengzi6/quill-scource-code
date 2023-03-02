@@ -5,8 +5,13 @@
 
 ## quill 源码阅读
 
+blot 文件夹：这个文件夹下面的代码实现了 Parchment 的核心数据结构——Blot，它是一个抽象类，表示了 Quill 中的文本对象，例如 TextBlot 表示一段文本，BlockBlot 表示一个文本块。所有的 Blot 对象都有一个 domNode 属性，表示它在文档中对应的 DOM 节点。
 
+format 文件夹：这个文件夹下面的代码实现了 Quill 中的格式化相关功能，例如设置字体颜色、背景色等。其中，FormatBlot 表示一个格式化对象，它包含了一个 attributes 属性，用于存储格式化的样式属性。
 
+attributor.js 文件：这个文件定义了一个名为 Attributor 的类，它用于封装对文本样式的操作，例如设置字体颜色、大小等。Attributor 的实例包含一个 attributeName 属性，表示样式属性的名称，以及一个 keyName 属性，表示样式属性在 Quill 内部的名称。
+
+registry.js 文件：这个文件定义了一个名为 Registry 的类，它用于管理 Quill 中的 Blot 类型、格式化类型、Attributor 等注册信息。Registry 的实例包含了一个 types 属性，用于存储已注册的类型信息，以及一系列注册、查询等方法。
 
 
 ## 前置知识
