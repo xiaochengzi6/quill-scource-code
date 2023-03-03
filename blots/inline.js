@@ -1,5 +1,5 @@
 import Text from './text';
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 
 
 class Inline extends Parchment.Inline {

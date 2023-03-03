@@ -1,4 +1,4 @@
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 import Block, { BlockEmbed } from './block';
 
 

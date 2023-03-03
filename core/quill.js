@@ -3,7 +3,7 @@ import Delta from 'quill-delta';
 import Editor from './editor';
 import Emitter from './emitter';
 import Module from './module';
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 import Selection, { Range } from './selection';
 import extend from 'extend';
 import logger from './logger';
@@ -90,11 +90,12 @@ class Quill {
     this.emitter = new Emitter();
     //  
     // 返回一个 Blot 类型
+    // 这里是重点，必须攻克下来
     this.scroll = Parchment.create(this.root, {
       emitter: this.emitter,
       whitelist: this.options.formats
     });
-    // 
+    // 获得 delta 数据 
     this.editor = new Editor(this.scroll);
     // 处理鼠标选中
     this.selection = new Selection(this.scroll, this.emitter);

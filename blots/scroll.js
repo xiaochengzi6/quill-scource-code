@@ -1,4 +1,4 @@
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 import Emitter from '../core/emitter';
 import Block, { BlockEmbed } from './block';
 import Break from './break';
@@ -10,7 +10,8 @@ function isLine(blot) {
   return (blot instanceof Block || blot instanceof BlockEmbed);
 }
 
-
+// 这里开始进入 parchment 的声明周期了
+// 这里是重点，大部分的内容都在这里被注册了
 class Scroll extends Parchment.Scroll {
   constructor(domNode, config) {
     super(domNode);
@@ -100,11 +101,16 @@ class Scroll extends Parchment.Scroll {
   }
 
   insertBefore(blot, ref) {
+    // 如果 blot 的作用域为 6 inline_Blot 
     if (blot.statics.scope === Parchment.Scope.INLINE_BLOT) {
+      // 拿到 this 自身的 defaultChild 的属性 比如 Sroll.defaultChild = 'block'
       let wrapper = Parchment.create(this.statics.defaultChild);
+      // wrapper = block_Blot
+      // 使用 wrapper 包裹一下 blot 
       wrapper.appendChild(blot);
       blot = wrapper;
     }
+    // 执行上 ScrollBolt.prototype 的 inserBefore, 也就可以是 containerBlot 的 insertBefore 方法
     super.insertBefore(blot, ref);
   }
 

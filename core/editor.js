@@ -1,6 +1,6 @@
 import Delta from 'quill-delta';
 import DeltaOp from 'quill-delta/lib/op';
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 import CodeBlock from '../formats/code';
 import CursorBlot from '../blots/cursor';
 import Block, { bubbleFormats } from '../blots/block';

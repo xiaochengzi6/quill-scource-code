@@ -1,5 +1,5 @@
 // 这里去引入自己打包的文件 方便调试
-import Parchment from '../parchment/dist/parchment';
+import Parchment from 'parchment';
 import clone from 'clone';
 import equal from 'deep-equal';
 import Emitter from './emitter';
@@ -21,23 +21,32 @@ class Selection {
     this.emitter = emitter;
     this.scroll = scroll;
     this.composing = false;
+    // 鼠标
     this.mouseDown = false;
     this.root = this.scroll.domNode;
+    // 光标
     this.cursor = Parchment.create('cursor', this);
     // savedRange is last non-null range
+    // 最后的范围
     this.lastRange = this.savedRange = new Range(0, 0);
+    // 鼠标事件
     this.handleComposition();
+    // 文本事件
     this.handleDragging();
+    // 更改当前文档选择的时候触发
     this.emitter.listenDOM('selectionchange', document, () => {
       if (!this.mouseDown) {
         setTimeout(this.update.bind(this, Emitter.sources.USER), 1);
       }
     });
+    // editor-change 事件
     this.emitter.on(Emitter.events.EDITOR_CHANGE, (type, delta) => {
       if (type === Emitter.events.TEXT_CHANGE && delta.length() > 0) {
         this.update(Emitter.sources.SILENT);
       }
     });
+    
+    // scroll-before-update 事件 
     this.emitter.on(Emitter.events.SCROLL_BEFORE_UPDATE, () => {
       if (!this.hasFocus()) return;
       let native = this.getNativeRange();
@@ -50,19 +59,25 @@ class Selection {
         } catch (ignored) {}
       });
     });
+
+    // scroll-optimize 事件
     this.emitter.on(Emitter.events.SCROLL_OPTIMIZE, (mutations, context) => {
       if (context.range) {
         const { startNode, startOffset, endNode, endOffset } = context.range;
         this.setNativeRange(startNode, startOffset, endNode, endOffset);
       }
     });
+
+    // 'slient'
     this.update(Emitter.sources.SILENT);
   }
 
   handleComposition() {
+    // 当触发文本编辑插座时候就会触发该事件
     this.root.addEventListener('compositionstart', () => {
       this.composing = true;
     });
+    // 当触发文本编辑结束或取消当前会话时会触发此事件
     this.root.addEventListener('compositionend', () => {
       this.composing = false;
       if (this.cursor.parent) {
@@ -75,6 +90,7 @@ class Selection {
     });
   }
 
+  // 鼠标事件
   handleDragging() {
     this.emitter.listenDOM('mousedown', document.body, () => {
       this.mouseDown = true;
@@ -167,6 +183,7 @@ class Selection {
     return range;
   }
 
+  // 获得范围
   getRange() {
     let normalized = this.getNativeRange();
     if (normalized == null) return [null, null];
@@ -316,6 +333,7 @@ class Selection {
     this.update(source);
   }
 
+  // 更新状态的操作
   update(source = Emitter.sources.USER) {
     let oldRange = this.lastRange;
     let [lastRange, nativeRange] = this.getRange();
