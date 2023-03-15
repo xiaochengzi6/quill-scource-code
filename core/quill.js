@@ -88,7 +88,6 @@ class Quill {
 
     // 注册订阅实例
     this.emitter = new Emitter();
-    //  
     // 返回一个 Blot 类型
     // 这里是重点，必须攻克下来
     this.scroll = Parchment.create(this.root, {

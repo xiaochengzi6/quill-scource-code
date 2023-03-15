@@ -18,6 +18,7 @@ let debug = logger('quill:clipboard');
 
 const DOM_KEY = '__ql-matcher';
 
+// 剪切板
 const CLIPBOARD_CONFIG = [
   [Node.TEXT_NODE, matchText],
   [Node.TEXT_NODE, matchNewline],
@@ -120,26 +121,32 @@ class Clipboard extends Module {
     }, 1);
   }
 
+  // 选择匹配的 match
   prepareMatching() {
     let elementMatchers = [], textMatchers = [];
     this.matchers.forEach((pair) => {
       let [selector, matcher] = pair;
       switch (selector) {
+        // 文本
         case Node.TEXT_NODE:
           textMatchers.push(matcher);
           break;
+       // 元素 
         case Node.ELEMENT_NODE:
           elementMatchers.push(matcher);
           break;
         default:
+      // 其他 比如 li b i br style 这些
           [].forEach.call(this.container.querySelectorAll(selector), (node) => {
             // TODO use weakmap
             node[DOM_KEY] = node[DOM_KEY] || [];
+            // 保存在 node['ql-matcher] 中
             node[DOM_KEY].push(matcher);
           });
           break;
       }
     });
+    // 将找到的 matcher 返回
     return [elementMatchers, textMatchers];
   }
 }
@@ -148,7 +155,7 @@ Clipboard.DEFAULTS = {
   matchVisual: true
 };
 
-
+// 处理样式问题
 function applyFormat(delta, format, value) {
   if (typeof format === 'object') {
     return Object.keys(format).reduce(function(delta, key) {
@@ -171,6 +178,7 @@ function computeStyle(node) {
   return node[DOM_KEY] || (node[DOM_KEY] = window.getComputedStyle(node));
 }
 
+// 判断 delta 中最后一个 是不是等于 text 
 function deltaEndsWith(delta, text) {
   let endText = "";
   for (let i = delta.ops.length - 1; i >= 0 && endText.length < text.length; --i) {
@@ -182,16 +190,21 @@ function deltaEndsWith(delta, text) {
 }
 
 function isLine(node) {
+  // 排除嵌入元素
   if (node.childNodes.length === 0) return false;   // Exclude embed blocks
   let style = computeStyle(node);
+  // 当元素的 style == 'block' | 'list-item' 时候就返回 true 
   return ['block', 'list-item'].indexOf(style.display) > -1;
 }
 
+// 转换 【后序遍历】
 function traverse(node, elementMatchers, textMatchers) {  // Post-order
+  // 文本节点
   if (node.nodeType === node.TEXT_NODE) {
     return textMatchers.reduce(function(delta, matcher) {
       return matcher(node, delta);
     }, new Delta());
+  // 元素节点
   } else if (node.nodeType === node.ELEMENT_NODE) {
     return [].reduce.call(node.childNodes || [], (delta, childNode) => {
       let childrenDelta = traverse(childNode, elementMatchers, textMatchers);
@@ -206,6 +219,7 @@ function traverse(node, elementMatchers, textMatchers) {  // Post-order
       return delta.concat(childrenDelta);
     }, new Delta());
   } else {
+    // 返回 {ops: []}
     return new Delta();
   }
 }
@@ -215,11 +229,13 @@ function matchAlias(format, node, delta) {
   return applyFormat(delta, format, true);
 }
 
+// 处理属性
 function matchAttributor(node, delta) {
   let attributes = Parchment.Attributor.Attribute.keys(node);
   let classes = Parchment.Attributor.Class.keys(node);
   let styles = Parchment.Attributor.Style.keys(node);
   let formats = {};
+  // 将 class style arributes 都组合在 formats 上 
   attributes.concat(classes).concat(styles).forEach((name) => {
     let attr = Parchment.query(name, Parchment.Scope.ATTRIBUTE);
     if (attr != null) {
@@ -236,6 +252,7 @@ function matchAttributor(node, delta) {
       formats[attr.attrName] = attr.value(node) || undefined;
     }
   });
+  // 处理将 formats 添加到 delta 上
   if (Object.keys(formats).length > 0) {
     delta = applyFormat(delta, formats);
   }
@@ -243,8 +260,10 @@ function matchAttributor(node, delta) {
 }
 
 function matchBlot(node, delta) {
+  // 找到对应的 blot 
   let match = Parchment.query(node);
   if (match == null) return delta;
+  // 如果是嵌入结构
   if (match.prototype instanceof Parchment.Embed) {
     let embed = {};
     let value = match.value(node);
@@ -265,10 +284,12 @@ function matchBreak(node, delta) {
   return delta;
 }
 
+// 空的数据
 function matchIgnore() {
   return new Delta();
 }
 
+// 缩进
 function matchIndent(node, delta) {
   let match = Parchment.query(node);
   if (match == null || match.blotName !== 'list-item' || !deltaEndsWith(delta, '\n')) {
@@ -285,8 +306,10 @@ function matchIndent(node, delta) {
   return delta.compose(new Delta().retain(delta.length() - 1).retain(1, { indent: indent}));
 }
 
+// 匹配新的一行
 function matchNewline(node, delta) {
   if (!deltaEndsWith(delta, '\n')) {
+    // 如果节点是行元素或者下一个节点也是行元素那么就插入 '\n'
     if (isLine(node) || (delta.length() > 0 && node.nextSibling && isLine(node.nextSibling))) {
       delta.insert('\n');
     }
@@ -294,6 +317,7 @@ function matchNewline(node, delta) {
   return delta;
 }
 
+// 这里是做了一个匹配 如果下一个元素的空间 offsetTop 大于 元素 offsetTop + 自身高度的1.5倍就会在加上 \n
 function matchSpacing(node, delta) {
   if (isLine(node) && node.nextElementSibling != null && !deltaEndsWith(delta, '\n\n')) {
     let nodeHeight = node.offsetHeight + parseFloat(computeStyle(node).marginTop) + parseFloat(computeStyle(node).marginBottom);
@@ -304,51 +328,75 @@ function matchSpacing(node, delta) {
   return delta;
 }
 
+
+// 处理样式问题
 function matchStyles(node, delta) {
   let formats = {};
   let style = node.style || {};
   if (style.fontStyle && computeStyle(node).fontStyle === 'italic') {
+    // 添加属性 是否倾斜
     formats.italic = true;
   }
   if (style.fontWeight && (computeStyle(node).fontWeight.startsWith('bold') ||
                            parseInt(computeStyle(node).fontWeight) >= 700)) {
+    // 是否加粗
     formats.bold = true;
   }
+  // 默认的样式处理方法
   if (Object.keys(formats).length > 0) {
     delta = applyFormat(delta, formats);
   }
+  // 缩进
   if (parseFloat(style.textIndent || 0) > 0) {  // Could be 0.5in
     delta = new Delta().insert('\t').concat(delta);
   }
   return delta;
 }
 
+/**
+ * 匹配文本
+ * @param {*} node  要匹配的元素
+ * @param {*} delta {ops: []}
+ * @returns 
+ */
 function matchText(node, delta) {
   let text = node.data;
   // Word represents empty line with <o:p>&nbsp;</o:p>
   if (node.parentNode.tagName === 'O:P') {
+    // delta 添加 text 
     return delta.insert(text.trim());
   }
   if (text.trim().length === 0 && node.parentNode.classList.contains('ql-clipboard')) {
+    // 如果是剪切板内容就直接返回
     return delta;
   }
   if (!computeStyle(node.parentNode).whiteSpace.startsWith('pre')) {
     // eslint-disable-next-line func-style
+    // 当 collapse == true 保留 ' ' 否则 ''
     let replacer = function(collapse, match) {
+      // 匹配空格 替换成 ''
       match = match.replace(/[^\u00a0]/g, '');    // \u00a0 is nbsp;
+      // 确保 ' ' 不会被无故删除 
       return match.length < 1 && collapse ? ' ' : match;
     };
+    // \r \n 替换成 ' '
     text = text.replace(/\r\n/g, ' ').replace(/\n/g, ' ');
+    // 单词边界替换成 '' 有空格的会保留 ' '
     text = text.replace(/\s\s+/g, replacer.bind(replacer, true));  // collapse whitespace
+    // 前的兄弟节点 == null && 父节点是 行元素  or 有兄弟节点 && 兄弟节点为 行元素
     if ((node.previousSibling == null && isLine(node.parentNode)) ||
         (node.previousSibling != null && isLine(node.previousSibling))) {
+      // 找到文本首部的空白符号 替换为 ''
       text = text.replace(/^\s+/, replacer.bind(replacer, false));
     }
+    // 后的兄弟节点
     if ((node.nextSibling == null && isLine(node.parentNode)) ||
         (node.nextSibling != null && isLine(node.nextSibling))) {
+      // 排除后的空白符号 替换为 ''
       text = text.replace(/\s+$/, replacer.bind(replacer, false));
     }
   }
+  // 最终添加在 delta 数据中
   return delta.insert(text);
 }
 

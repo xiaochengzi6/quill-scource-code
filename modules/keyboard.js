@@ -18,10 +18,13 @@ class Keyboard extends Module {
   static match(evt, binding) {
     binding = normalize(binding);
     if (['altKey', 'ctrlKey', 'metaKey', 'shiftKey'].some(function(key) {
+      // 查看是否是 alt ctrl meta(window健) shift 健
       return (!!binding[key] !== evt[key] && binding[key] !== null);
     })) {
+      // 如果是就返回 false 
       return false;
     }
+    // 否则 就要找到 evt.which || keycode 也就是键盘的映射
     return binding.key === (evt.which || evt.keyCode);
   }
 
@@ -73,9 +76,12 @@ class Keyboard extends Module {
   }
 
   listen() {
+    // 这里去监听键盘事件
     this.quill.root.addEventListener('keydown', (evt) => {
+      // 事件在进行中，则不会处理
       if (evt.defaultPrevented) return;
       let which = evt.which || evt.keyCode;
+      // 匹配事件 
       let bindings = (this.bindings[which] || []).filter(function(binding) {
         return Keyboard.match(evt, binding);
       });
@@ -127,6 +133,8 @@ class Keyboard extends Module {
   }
 }
 
+
+// 键映射
 Keyboard.keys = {
   BACKSPACE: 8,
   TAB: 9,
@@ -139,6 +147,7 @@ Keyboard.keys = {
   DELETE: 46
 };
 
+// 默认配置
 Keyboard.DEFAULTS = {
   bindings: {
     'bold'      : makeFormatHandler('bold'),
@@ -466,6 +475,7 @@ function makeFormatHandler(format) {
   };
 }
 
+// 默认值
 function normalize(binding) {
   if (typeof binding === 'string' || typeof binding === 'number') {
     return normalize({ key: binding });

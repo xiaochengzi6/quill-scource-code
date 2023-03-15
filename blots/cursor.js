@@ -1,7 +1,7 @@
 import Parchment from 'parchment';
 import TextBlot from './text';
 
-
+// 光标
 class Cursor extends Parchment.Embed {
   static value() {
     return undefined;
@@ -10,6 +10,7 @@ class Cursor extends Parchment.Embed {
   constructor(domNode, selection) {
     super(domNode);
     this.selection = selection;
+    // 创建无文本的零度空间
     this.textNode = document.createTextNode(Cursor.CONTENTS);
     this.domNode.appendChild(this.textNode);
     this._length = 0;
@@ -55,8 +56,11 @@ class Cursor extends Parchment.Embed {
     this.parent = null;
   }
 
+  // 这里就是对鼠标选择的范围做了处理
   restore() {
-    if (this.selection.composing || this.parent == null) return;
+    // 文本编辑状态
+    if (this.composing || this.parent == null) return;
+    // 
     let textNode = this.textNode;
     let range = this.selection.getNativeRange();
     let restoreText, start, end;
@@ -110,6 +114,7 @@ class Cursor extends Parchment.Embed {
 Cursor.blotName = 'cursor';
 Cursor.className = 'ql-cursor';
 Cursor.tagName = 'span';
+// 0宽度无间断空间
 Cursor.CONTENTS = "\uFEFF";   // Zero width no break space
 
 

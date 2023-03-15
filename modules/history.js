@@ -9,14 +9,22 @@ class History extends Module {
     this.lastRecorded = 0;
     this.ignoreChange = false;
     this.clear();
+
+    // 去监听 quill 编辑器 修改
     this.quill.on(Quill.events.EDITOR_CHANGE, (eventName, delta, oldDelta, source) => {
+      // 如果 修改不是文本修改，没有修改 就返回
       if (eventName !== Quill.events.TEXT_CHANGE || this.ignoreChange) return;
+      // 如果是用户修改
       if (!this.options.userOnly || source === Quill.sources.USER) {
         this.record(delta, oldDelta);
       } else {
+        // 否则 使用 transForm
         this.transform(delta);
       }
     });
+
+
+    // 键绑定
     this.quill.keyboard.addBinding({ key: 'Z', shortKey: true }, this.undo.bind(this));
     this.quill.keyboard.addBinding({ key: 'Z', shortKey: true, shiftKey: true }, this.redo.bind(this));
     if (/Win/i.test(navigator.platform)) {
@@ -46,9 +54,14 @@ class History extends Module {
 
   record(changeDelta, oldDelta) {
     if (changeDelta.ops.length === 0) return;
+    // redo 栈 置空
     this.stack.redo = [];
+    // 比对差异
     let undoDelta = this.quill.getContents().diff(oldDelta);
+    // 获得当前时间
     let timestamp = Date.now();
+
+    // 这里是隔 delay 会保存一次 undo 操作 到 undo 栈中
     if (this.lastRecorded + this.options.delay > timestamp && this.stack.undo.length > 0) {
       let delta = this.stack.undo.pop();
       undoDelta = undoDelta.compose(delta.undo);
@@ -56,10 +69,13 @@ class History extends Module {
     } else {
       this.lastRecorded = timestamp;
     }
+
     this.stack.undo.push({
       redo: changeDelta,
       undo: undoDelta
     });
+
+    // 如果维护的 undo 栈过大就从头删除
     if (this.stack.undo.length > this.options.maxStack) {
       this.stack.undo.shift();
     }

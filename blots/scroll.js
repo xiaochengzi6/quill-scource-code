@@ -132,6 +132,7 @@ class Scroll extends Parchment.Scroll {
         if (isLine(child)) {
           lines.push(child);
         } else if (child instanceof Parchment.Container) {
+          // 递归
           lines = lines.concat(getLines(child, index, lengthLeft));
         }
         lengthLeft -= length;

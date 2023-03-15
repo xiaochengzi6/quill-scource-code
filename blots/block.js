@@ -50,6 +50,7 @@ class Block extends Parchment.Block {
     this.cache = {};
   }
 
+  // 取出数据
   delta() {
     if (this.cache.delta == null) {
       this.cache.delta = this.descendants(Parchment.Leaf).reduce((delta, leaf) => {

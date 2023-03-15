@@ -20,6 +20,7 @@ class Selection {
   constructor(scroll, emitter) {
     this.emitter = emitter;
     this.scroll = scroll;
+    // 是否触发文本编辑
     this.composing = false;
     // 鼠标
     this.mouseDown = false;
@@ -173,9 +174,12 @@ class Selection {
     }
   }
 
+  // 返回鼠标选择的范围
   getNativeRange() {
+    // 返回一个 selection 对象 该对象表示用户选择文本范围和符号的当前位置 
     let selection = document.getSelection();
     if (selection == null || selection.rangeCount <= 0) return null;
+    // 取出选择的范围 参考： https://developer.mozilla.org/en-US/docs/Web/API/Selection
     let nativeRange = selection.getRangeAt(0);
     if (nativeRange == null) return null;
     let range = this.normalizeNative(nativeRange);
@@ -217,6 +221,10 @@ class Selection {
     return new Range(start, end-start);
   }
 
+  // 取出 nativeRange 中的属性 
+  //   startContainer: 选择的初始位置
+  //   endContainer: 选择的末尾位置
+  // 参考：https://developer.mozilla.org/en-US/docs/Web/API/Range
   normalizeNative(nativeRange) {
     if (!contains(this.root, nativeRange.startContainer) ||
         (!nativeRange.collapsed && !contains(this.root, nativeRange.endContainer))) {
@@ -229,6 +237,7 @@ class Selection {
     };
     [range.start, range.end].forEach(function(position) {
       let node = position.node, offset = position.offset;
+      // 这没看懂...
       while (!(node instanceof Text) && node.childNodes.length > 0) {
         if (node.childNodes.length > offset) {
           node = node.childNodes[offset];
